@@ -1,0 +1,51 @@
+---
+title: "N Parameters"
+author: "Tanay Janmanchi"
+format: html
+execute: 
+  echo: false
+---
+
+```{r}
+#| label: setup
+#| message: FALSE
+
+library(tidyverse)
+library(primer.data)
+
+```
+
+```{r}
+set.seed(9)
+ch10_data <- shaming |> mutate(p_00 = (primary_00 == "Yes"),
+         p_02 = (primary_02 == "Yes"),
+         p_04 = (primary_04 == "Yes"),
+         g_00 = (general_00 == "Yes"),
+         g_02 = (general_02 == "Yes"),
+         g_04 = (general_04 == "Yes"),
+         civ_engage = p_00 + p_02 + p_04 + 
+                      g_00 + g_02 + g_04,
+         voter_class = case_when(civ_engage %in% c(5, 6) ~ "Always Vote",
+                                 civ_engage %in% c(3, 4) ~ "Sometimes Vote",
+                                 civ_engage %in% c(1, 2) ~ "Rarely Vote"),
+         voter_class = factor(voter_class, levels = c("Rarely Vote", 
+                                                      "Sometimes Vote", 
+                                                      "Always Vote")),
+         age_z = as.numeric(scale(age))) |> rename(voted = primary_06) |> select(voted, treatment, sex, age_z, civ_engage, voter_class) |> drop_na() |> slice_sample(prop = 0.1)
+
+
+ch10_data |>
+  sample_frac(0.05) |> 
+  ggplot(aes(x = civ_engage, y = voted)) +
+    geom_jitter(alpha = 0.03, height = 0.1) +
+    scale_x_continuous(breaks = 1:6) + 
+    scale_y_continuous(breaks = c(0, 1), labels = c("No", "Yes")) +
+    labs(title = "Civic Engagement and Voting Behavior in Michigan",
+         subtitle = "Past voting predicts future voting.",
+         x = "Civic Engagement",
+         y = "Voted in 2006 Primary Election",
+         caption = "Random sample of 5% of the data from Gerber, Green, and Larimer (2008)")
+
+
+```
+
